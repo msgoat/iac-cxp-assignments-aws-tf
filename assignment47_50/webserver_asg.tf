@@ -10,6 +10,7 @@ locals {
 
 # creates an auto scaling group that ensures the availability of the requested number of web server
 resource "aws_autoscaling_group" "web" {
+  count = var.webserver_purchasing_option == "on-demand" ? 1 : 0
   desired_capacity = local.number_of_webservers
   launch_template {
     id = aws_launch_template.web.id
@@ -18,6 +19,56 @@ resource "aws_autoscaling_group" "web" {
   max_size = local.number_of_webservers
   min_size = 0
   name = "asg-${local.webserver_name}-web"
+  vpc_zone_identifier = module.reference_vpc.app_subnet_ids
+  tags = [for k, v in merge(map("Role", "web"), local.main_common_tags) : map("key", k, "value", v, "propagate_at_launch", "true")]
+}
+
+# calculate optimum spot price based on the current spot prices
+data "aws_ec2_spot_price" "web_spot" {
+  count = length(data.aws_availability_zones.current.names)
+  instance_type = "t3a.micro"
+  availability_zone = data.aws_availability_zones.current.names[count.index]
+
+  filter {
+    name   = "product-description"
+    values = ["Linux/UNIX"]
+  }
+}
+
+# creates an auto scaling group that ensures the availability of the requested number of web server
+resource "aws_autoscaling_group" "web_spot" {
+  count = var.webserver_purchasing_option == "spot" ? 1 : 0
+  desired_capacity = local.number_of_webservers
+  mixed_instances_policy {
+
+    instances_distribution {
+      spot_allocation_strategy = "lowest-price"
+      spot_instance_pools = 6
+      spot_max_price = var.webserver_bid_price
+    }
+
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.web.id
+      }
+
+      override {
+        instance_type = "t2.micro"
+      }
+
+      override {
+        instance_type = "t3.micro"
+      }
+
+      override {
+        instance_type = "t3a.micro"
+      }
+    }
+  }
+  target_group_arns = [ aws_lb_target_group.web.arn ]
+  max_size = local.number_of_webservers
+  min_size = 0
+  name = "asg-${local.webserver_name}-web-spot"
   vpc_zone_identifier = module.reference_vpc.app_subnet_ids
   tags = [for k, v in merge(map("Role", "web"), local.main_common_tags) : map("key", k, "value", v, "propagate_at_launch", "true")]
 }

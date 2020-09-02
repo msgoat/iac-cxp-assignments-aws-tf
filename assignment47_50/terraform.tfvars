@@ -11,3 +11,5 @@ number_of_bastion_instances = 1
 bastion_key_name = "key-eu-west-1-bastion-miket92"
 subdomain_name = "cxp.vpc.aws.msgoat.eu"
 webserver_key_name = "key-eu-west-1-miket92-web"
+webserver_purchasing_option = "spot"
+webserver_bid_price = "0.0050"

@@ -57,3 +57,13 @@ variable "number_of_webservers" {
 variable "webserver_key_name" {
   description = "Name of SSH key pair name to used for the webserver instances"
 }
+
+variable "webserver_purchasing_option" {
+  description = "Purchasing option for webserver instances; possible values are: on-demand (default), spot"
+  default = "on-demand"
+}
+
+variable "webserver_bid_price" {
+  description = "Max bid price per hour when webserver purchasing option is 'spot'"
+  default = ""
+}
