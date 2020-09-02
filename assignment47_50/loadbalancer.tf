@@ -48,6 +48,8 @@ resource aws_lb_listener https {
     type = "forward"
     target_group_arn = aws_lb_target_group.web.arn
   }
+
+  depends_on = [ aws_acm_certificate_validation.ssl ]
 }
 
 # create target group for all web servers

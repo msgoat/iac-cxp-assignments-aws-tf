@@ -14,10 +14,11 @@ resource "aws_autoscaling_group" "web" {
   launch_template {
     id = aws_launch_template.web.id
   }
+  target_group_arns = [ aws_lb_target_group.web.arn ]
   max_size = local.number_of_webservers
-  min_size = 1
+  min_size = 0
   name = "asg-${local.webserver_name}-web"
-  vpc_zone_identifier = module.reference_vpc.public_subnet_ids
+  vpc_zone_identifier = module.reference_vpc.app_subnet_ids
   tags = [for k, v in merge(map("Role", "web"), local.main_common_tags) : map("key", k, "value", v, "propagate_at_launch", "true")]
 }
 
@@ -33,6 +34,8 @@ resource "aws_launch_template" "web" {
   image_id = data.aws_ami.web.id
   key_name = var.webserver_key_name
   vpc_security_group_ids = [aws_security_group.web.id]
+  user_data = filebase64("resources/install_nginx.sh")
+  update_default_version = true
   tag_specifications {
     resource_type = "instance"
     tags = merge(map(
@@ -51,7 +54,6 @@ resource "aws_launch_template" "web" {
 }
 
 # retrieve the latest AMI version used for all bastion instances
-# @TODO: use custom hardened AMI based on Amazon Linux 2
 data "aws_ami" "web" {
   owners = ["137112412989"]
   #  executable_users = ["self"]
