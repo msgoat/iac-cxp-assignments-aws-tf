@@ -47,3 +47,13 @@ variable "bastion_key_name" {
 variable "subdomain_name" {
   description = "Name of subdomain to be used for all public accessible resources"
 }
+
+variable "number_of_webservers" {
+  description = "Number of web server instances; default: one per availability zone"
+  type = number
+  default = -1
+}
+
+variable "webserver_key_name" {
+  description = "Name of SSH key pair name to used for the webserver instances"
+}

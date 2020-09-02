@@ -18,3 +18,11 @@ locals {
     Stage        = var.stage
   }
 }
+
+data "aws_region" "current" {
+  name = var.region_name
+}
+
+data "aws_availability_zones" "current" {
+  all_availability_zones = true
+}
